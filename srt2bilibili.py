@@ -5,7 +5,7 @@
 # Created: 11/23/2014
 # srt2Bilibili is licensed under GNUv2 license
 '''
-srt2Bilibili 0.0.1
+srt2Bilibili 0.02
 Beining@ACICFG
 cnbeining[at]gmail.com
 http://www.cnbeining.com
@@ -23,23 +23,15 @@ import logging
 import hashlib
 import time as time_old
 import getopt
-
-
 from xml.dom.minidom import parse, parseString
 import xml.dom.minidom
 
-global FAKE_HEADER, APPKEY, SECRETKEY, VER, rnd, cid
+global APPKEY, SECRETKEY, VER, rnd, cid
 
-FAKE_HEADER = {
-    'User-Agent':
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache'}
+
 APPKEY = '85eb6835b0a1034e'
 SECRETKEY = '2ad42749773c441109bdc0191257a664'
-VER = '0.01'
-
-
+VER = '0.02'
 
 #----------------------------------------------------------------------
 def calc_sign(string):
@@ -87,8 +79,12 @@ def convert_cookie(cookie_raw):
     cookie = {'DedeUserID': 358422, 'DedeUserID__ckMd5': '72682a6838d150dd', 'SESSDATA': '72e0ee97%2C1419212650%2C6b47a180'}"""
     cookie = {}
     logging.debug('Raw Cookie: ' + cookie_raw)
-    for i in [i.strip() for i in cookie_raw.split(';')]:
-        cookie[i.split('=')[0]] = i.split('=')[1]
+    try:
+        for i in [i.strip() for i in cookie_raw.split(';')]:
+            cookie[i.split('=')[0]] = i.split('=')[1]
+    except IndexError:
+        #if someone put a ; at the EOF
+        pass
     return cookie
 
 #----------------------------------------------------------------------
@@ -112,6 +108,7 @@ def post_one(message, rnd, cid, cookie, fontsize = 25, mode = 1, color = 1677721
         if int(r.text) <= 0:
             logging.warning('Line failed:')
             logging.warning('Message:' + str(message))
+            logging.warning('ERROR Code: ' + str(r.text))
         else:
             print(message)
         #logging.info(message)
@@ -120,12 +117,11 @@ def post_one(message, rnd, cid, cookie, fontsize = 25, mode = 1, color = 1677721
         print('Payload:' + str(payload))
         pass
 
-
 #----------------------------------------------------------------------
 def timestamp2sec(timestamp):
-    """"""
+    """SubRipTime->float
+    SubRipTime(0, 0, 0, 0)"""
     return (int(timestamp.seconds) + 60 * int(timestamp.minutes) + 3600 * int(timestamp.hours) + float(int(timestamp.hours) / 1000))
-
 
 #----------------------------------------------------------------------
 def read_cookie(cookiepath):
@@ -142,11 +138,11 @@ def read_cookie(cookiepath):
         # print(cookies)
         return cookies
     except:
-        print('WARNING: Cannot read cookie, may affect some videos...')
+        logging.warning('Cannot read cookie!')
         return ['']
 
 #----------------------------------------------------------------------
-def main(srt, fontsize, mode, color, cookie, aid, p = 1, cool = 2, pool = 0):
+def main(srt, fontsize, mode, color, cookie, aid, p = 1, cool = 0.1, pool = 0):
     """str,int,int,int,str,int,int,int,int->None"""
     rnd = int(random.random() * 1000000000)
     cid = int(find_cid_api(aid, p))
@@ -159,9 +155,10 @@ def main(srt, fontsize, mode, color, cookie, aid, p = 1, cool = 2, pool = 0):
         if '\n' in message:
             for line in message.split('\n'):
                 post_one(line, rnd, cid, cookie, fontsize, mode, color, playtime, pool)
+                time_old.sleep(float(cool))
         else:
             post_one(message, rnd, cid, cookie, fontsize, mode, color, playtime, pool)
-        time_old.sleep(int(cool))
+            time_old.sleep(float(cool))
     print('INFO: DONE!')
 
 
@@ -181,14 +178,14 @@ def usage():
     INCLUDING (BUT NOT LIMITED TO) TEMPORARY OR PERMANENT BAN OF ACCOUNT AND/OR
     IP ADDRESS, DANMAKU POOL OVERSIZE, RUIN OF NORMAL DANMAKU.
     
-    ONLY USE IF YOU KNOW WHAT YOU ARE DOING.
+    ONLY USE WHEN YOU KNOW WHAT YOU ARE DOING.
     
     This program is provided **as is**, with absolutely no warranty.
     
     
     Usage:
     
-    python3 srt2bilibili.py (-h) (-a 12345678) [-p 1] [-c ./bilicookies] (-s 1.srt) [-f 25] [-m 0] [-o 16777215] [-w 2] [-l 0]
+    python3 srt2bilibili.py (-h) (-a 12345678) [-p 1] [-c ./bilicookies] (-s 1.srt) [-f 18] [-m 0] [-o 16711680] [-w 0.1] [-l 0]
     
     -h: Default: None
         Print this usage file.
@@ -210,7 +207,7 @@ def usage():
         srt2bilibili will post multi danmakues for multi-line subtitle,
         since there's a ban on the use of \n.
         
-    -f Default: 25
+    -f Default: 18
         The size of danmaku.
         
     -m Default: 4
@@ -222,10 +219,11 @@ def usage():
         7: Special
         9: Advanced
         
-    -o Default: 16777215
+    -o Default: 16711680
         The colour of danmaku, in integer.
+        Default is red.
         
-    -w Default: 2
+    -w Default: 0.1
        The cool time (time to wait between posting danmakues)
        Do not set it too small, which would lead to ban or failure.
        
@@ -239,12 +237,13 @@ def usage():
     More info avalable at http://docs.bilibili.cn/wiki/API.comment  .
     ''')
 
+#----------------------------------------------------------------------
 if __name__=='__main__':
     argv_list = []
     argv_list = sys.argv[1:]
-    aid, part, cookiepath, srt, fontsize, mode, color, cooltime, playtime, pool = 0, 1, './bilicookies', '', 25, 4, 16777215, 2, 0, 0
+    aid, part, cookiepath, srt, fontsize, mode, color, cooltime, playtime, pool = 0, 1, './bilicookies', '', 18, 4, 16711680, 0.1, 0, 0
     try:
-        opts, args = getopt.getopt(argv_list, "ha:p:c:s:f:m:o:l:",
+        opts, args = getopt.getopt(argv_list, "ha:p:c:s:f:m:o:w:l:",
                                    ['help', "av", 'part', 'cookie', 'srt', 'fontsize', 'mode', 'color', 'cooltime', 'pool'])
     except getopt.GetoptError:
         usage()
@@ -298,14 +297,14 @@ if __name__=='__main__':
             try:
                 argv_list.remove('-o')
             except:
-                color = 16777215
+                color = 16711680
                 break
         if o in ('-w', '--cooltime'):
             cooltime = a
             try:
                 argv_list.remove('-w')
             except:
-                cooltime = 2
+                cooltime = 0.1
                 break
         if o in ('-l', '--pool'):
             pool = a

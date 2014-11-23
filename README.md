@@ -16,9 +16,7 @@ The file should looks like:
 
 Command line mode:
 
-    Usage:
-    
-    python3 srt2bilibili.py (-h) (-a 12345678) [-p 1] [-c ./bilicookies] (-s 1.srt) [-f 25] [-m 0] [-o 16777215] [-w 2] [-l 0]
+    python3 srt2bilibili.py (-h) (-a 12345678) [-p 1] [-c ./bilicookies] (-s 1.srt) [-f 18] [-m 0] [-o 16711680] [-w 0.1] [-l 0]
     
     -h: Default: None
         Print this usage file.
@@ -40,7 +38,7 @@ Command line mode:
         srt2bilibili will post multi danmakues for multi-line subtitle,
         since there's a ban on the use of \n.
         
-    -f Default: 25
+    -f Default: 18
         The size of danmaku.
         
     -m Default: 4
@@ -52,10 +50,11 @@ Command line mode:
         7: Special
         9: Advanced
         
-    -o Default: 16777215
+    -o Default: 16711680
         The colour of danmaku, in integer.
+        Default is red.
         
-    -w Default: 2
+    -w Default: 0.1
        The cool time (time to wait between posting danmakues)
        Do not set it too small, which would lead to ban or failure.
        
@@ -94,10 +93,6 @@ Contributing
 
 Any contribution is welcome. 
 
-For issues, it would be better to include the log output, which can be enabled by ```-l```. 
-
-MAKE SURE YOU DELETE ANY SENSIVE INFORMATION THAT YOU DO NOT WANT TO SHARE PUBLICLY(E.G., IP ADDRESS, USERNAME, ETC.) BEFORE YOU POST ANYTHING!
-
 *You can still send me the info privately via my email. PGP public key avalable at http://www.cnbeining.com/about/*
 
 Any donation is welcome as well. Please get in touch with me: cnbeining[at]gmail.com .
@@ -114,4 +109,6 @@ Misc
 
 History
 ----
-0.0.1: The very start
+0.02: Error handling with cookies; Clean headers; Change default values for quicker posting and better subtitle.
+
+0.01: The very start

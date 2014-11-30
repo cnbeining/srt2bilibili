@@ -5,7 +5,7 @@
 # Created: 11/23/2014
 # srt2Bilibili is licensed under GNUv2 license
 '''
-srt2Bilibili 0.02
+srt2Bilibili 0.02.1
 Beining@ACICFG
 cnbeining[at]gmail.com
 http://www.cnbeining.com
@@ -14,11 +14,23 @@ GNUv2 license
 '''
 
 import sys
+if sys.version_info < (3, 0):
+    sys.stderr.write('ERROR: Python 3.0 or newer version is required.\n')
+    sys.exit(1)
+try:
+    import requests
+except:
+    sys.stderr.write('ERROR: Requests is required. Please check https://github.com/cnbeining/srt2bilibili#usage .\n')
+    sys.exit(1)
+try:
+    import pysrt
+except:
+    sys.stderr.write('ERROR: Pysrt is required. Please check https://github.com/cnbeining/srt2bilibili#usage .\n')
+    sys.exit(1)
+
 import os
 import random
-import requests
 import urllib
-import pysrt
 import logging
 import hashlib
 import time as time_old
@@ -28,10 +40,9 @@ import xml.dom.minidom
 
 global APPKEY, SECRETKEY, VER, rnd, cid
 
-
 APPKEY = '85eb6835b0a1034e'
 SECRETKEY = '2ad42749773c441109bdc0191257a664'
-VER = '0.02'
+VER = '0.02.1'
 
 #----------------------------------------------------------------------
 def calc_sign(string):
@@ -327,3 +338,4 @@ if __name__=='__main__':
     BILIGRAB_HEADER = {'User-Agent': BILIGRAB_UA, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Cookie': cookies[0]}
     logging.debug(cookies[0])
     main(srt, fontsize, mode, color, cookies[0], aid, part, cooltime, pool)
+

@@ -109,6 +109,8 @@ Misc
 
 History
 ----
+0.02.1: Add error handling if requirements not met.
+
 0.02: Error handling with cookies; Clean headers; Change default values for quicker posting and better subtitle.
 
 0.01: The very start

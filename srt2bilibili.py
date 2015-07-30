@@ -5,7 +5,7 @@
 # Created: 11/23/2014
 # srt2Bilibili is licensed under GNUv2 license
 '''
-srt2Bilibili 0.02.1
+srt2Bilibili 0.02.2 alpha
 Beining@ACICFG
 cnbeining[at]gmail.com
 http://www.cnbeining.com
@@ -37,12 +37,13 @@ import time as time_old
 import getopt
 from xml.dom.minidom import parse, parseString
 import xml.dom.minidom
+from random import randint
 
 global APPKEY, SECRETKEY, VER, rnd, cid
 
 APPKEY = '85eb6835b0a1034e'
 SECRETKEY = '2ad42749773c441109bdc0191257a664'
-VER = '0.02.1'
+VER = '0.02.2 alpha'
 
 #----------------------------------------------------------------------
 def calc_sign(string):
@@ -86,8 +87,8 @@ def find_cid_api(vid, p):
 #----------------------------------------------------------------------
 def convert_cookie(cookie_raw):
     """str->dict
-    'DedeUserID=358422; DedeUserID__ckMd5=72682a6838d150dd; SESSDATA=72e0ee97%2C1419212650%2C6b47a180'
-    cookie = {'DedeUserID': 358422, 'DedeUserID__ckMd5': '72682a6838d150dd', 'SESSDATA': '72e0ee97%2C1419212650%2C6b47a180'}"""
+    'DedeUserID=358422; DedeUserID__ckMd5=; SESSDATA=72e0ee97%%2C6b47a180'
+    cookie = {'DedeUserID': 358422, 'DedeUserID__ckMd5': '', 'SESSDATA': '72e0ee97%%2C6b47a180'}"""
     cookie = {}
     logging.debug('Raw Cookie: ' + cookie_raw)
     try:
@@ -105,10 +106,14 @@ def getdate():
     return time_old.strftime("%Y-%m-%d %X", time_old.localtime())
 
 #----------------------------------------------------------------------
-def post_one(message, rnd, cid, cookie, fontsize = 25, mode = 1, color = 16777215, playTime = 0, pool = 0):
+def post_one(message, rnd, cid, cookie, fontsize = 25, mode = 1, color = 16777215, playTime = 0, pool = 0, fake_ip = False):
     """
     PARS NOT THE PERFECT SAME AS A PAYLOAD!"""
     headers = {'Origin': 'http://static.hdslb.com', 'X-Requested-With': 'ShockwaveFlash/15.0.0.223', 'Referer': 'http://static.hdslb.com/play.swf', 'User-Agent': BILIGRAB_UA, 'Host': 'interface.bilibili.com', 'Content-Type': 'application/x-www-form-urlencoded', 'Cookie': cookie}
+    if fake_ip:
+        FAKE_IP = ".".join(str(randint(1, 255)) for i in range(4))
+        headers.update({'X-Forwarded-For' : FAKE_IP, 'Client-IP' : FAKE_IP})
+    #print(headers)
     url = 'http://interface.bilibili.com/dmpost'
     try:
         date = getdate()
@@ -153,7 +158,7 @@ def read_cookie(cookiepath):
         return ['']
 
 #----------------------------------------------------------------------
-def main(srt, fontsize, mode, color, cookie, aid, p = 1, cool = 0.1, pool = 0):
+def main(srt, fontsize, mode, color, cookie, aid, p = 1, cool = 0.1, pool = 0, fake_ip = False):
     """str,int,int,int,str,int,int,int,int->None"""
     rnd = int(random.random() * 1000000000)
     cid = int(find_cid_api(aid, p))
@@ -165,10 +170,10 @@ def main(srt, fontsize, mode, color, cookie, aid, p = 1, cool = 0.1, pool = 0):
         message = sub.text
         if '\n' in message:
             for line in message.split('\n'):
-                post_one(line, rnd, cid, cookie, fontsize, mode, color, playtime, pool)
+                post_one(line, rnd, cid, cookie, fontsize, mode, color, playtime, pool,fake_ip = fake_ip)
                 time_old.sleep(float(cool))
         else:
-            post_one(message, rnd, cid, cookie, fontsize, mode, color, playtime, pool)
+            post_one(message, rnd, cid, cookie, fontsize, mode, color, playtime, pool,fake_ip = fake_ip)
             time_old.sleep(float(cool))
     print('INFO: DONE!')
 
@@ -196,7 +201,7 @@ def usage():
     
     Usage:
     
-    python3 srt2bilibili.py (-h) (-a 12345678) [-p 1] [-c ./bilicookies] (-s 1.srt) [-f 18] [-m 0] [-o 16711680] [-w 0.1] [-l 0]
+    python3 srt2bilibili.py (-h) (-a 12345678) [-p 1] [-c ./bilicookies] (-s 1.srt) [-f 18] [-m 0] [-o 16711680] [-w 0.1] [-l 0] (-i)
     
     -h: Default: None
         Print this usage file.
@@ -245,6 +250,9 @@ def usage():
         2: Special
         If you own the video, please set it to 1 to prevent potential lost of danmaku.
         
+    -i Default: False
+        Use a fake IP address for every comment.
+    
     More info avalable at http://docs.bilibili.cn/wiki/API.comment  .
     ''')
 
@@ -254,8 +262,8 @@ if __name__=='__main__':
     argv_list = sys.argv[1:]
     aid, part, cookiepath, srt, fontsize, mode, color, cooltime, playtime, pool = 0, 1, './bilicookies', '', 18, 4, 16711680, 0.1, 0, 0
     try:
-        opts, args = getopt.getopt(argv_list, "ha:p:c:s:f:m:o:w:l:",
-                                   ['help', "av", 'part', 'cookie', 'srt', 'fontsize', 'mode', 'color', 'cooltime', 'pool'])
+        opts, args = getopt.getopt(argv_list, "ha:p:c:s:f:m:o:w:l:i",
+                                   ['help', "av", 'part', 'cookie', 'srt', 'fontsize', 'mode', 'color', 'cooltime', 'pool', 'fake-ip'])
     except getopt.GetoptError:
         usage()
         exit()
@@ -324,6 +332,8 @@ if __name__=='__main__':
             except:
                 pool = 0
                 break
+        if o in ('-i', '--fake-ip'):
+            fake_ip = True
     if aid == 0:
         logging.fatal('No aid!')
         exit()
@@ -337,5 +347,5 @@ if __name__=='__main__':
     BILIGRAB_UA = 'srt2Bilibili / ' + str(VER) + ' (cnbeining@gmail.com)'
     BILIGRAB_HEADER = {'User-Agent': BILIGRAB_UA, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Cookie': cookies[0]}
     logging.debug(cookies[0])
-    main(srt, fontsize, mode, color, cookies[0], aid, part, cooltime, pool)
+    main(srt, fontsize, mode, color, cookies[0], aid, part, cooltime, pool, fake_ip = fake_ip)
 

@@ -16,7 +16,7 @@ The file should looks like:
 
 Command line mode:
 
-    python3 srt2bilibili.py (-h) (-a 12345678) [-p 1] [-c ./bilicookies] (-s 1.srt) [-f 18] [-m 0] [-o 16711680] [-w 0.1] [-l 0]
+    python3 srt2bilibili.py (-h) (-a 12345678) [-p 1] [-c ./bilicookies] (-s 1.srt) [-f 18] [-m 0] [-o 16711680] [-w 0.1] [-l 0] (-i)
     
     -h: Default: None
         Print this usage file.
@@ -65,6 +65,9 @@ Command line mode:
         2: Special
         If you own the video, please set it to 1 to prevent potential lost of danmaku.
         
+    -i Default: False
+        Use a fake IP address for every comment.
+    
     More info avalable at http://docs.bilibili.cn/wiki/API.comment  .
 
 
@@ -83,7 +86,7 @@ Beining, http://www.cnbeining.com/
 License
 -----
 
-GNUv2 license.
+GPLv2 license.
 
 This program is provided **as is**, with absolutely no warranty.
 
@@ -109,6 +112,8 @@ Misc
 
 History
 ----
+0.02.2 alpha: Add IP faking.
+
 0.02.1: Add error handling if requirements not met.
 
 0.02: Error handling with cookies; Clean headers; Change default values for quicker posting and better subtitle.
